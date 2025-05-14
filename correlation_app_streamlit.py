@@ -1,291 +1,169 @@
-{
- "cells": [
-  {
-   "cell_type": "code",
-   "execution_count": 2,
-   "id": "98704ff4-08f3-4431-906c-192390d0c4c6",
-   "metadata": {},
-   "outputs": [
-    {
-     "name": "stderr",
-     "output_type": "stream",
-     "text": [
-      "2025-05-14 15:48:28.444 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.445 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.446 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.447 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.448 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.450 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.451 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.452 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.455 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.456 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.457 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.458 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.459 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.461 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.462 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.463 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.464 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.464 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.465 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.466 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.468 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.469 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.470 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.472 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.473 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.473 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.475 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.476 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.478 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.482 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n",
-      "2025-05-14 15:48:28.483 Thread 'MainThread': missing ScriptRunContext! This warning can be ignored when running in bare mode.\n"
-     ]
-    }
-   ],
-   "source": [
-    "import streamlit as st\n",
-    "import numpy as np\n",
-    "from math import sqrt, erf\n",
-    "\n",
-    "\n",
-    "# Predefined datasets\n",
-    "DATASETS = {\n",
-    "    \"Example 1 - Academic Performance\": {\n",
-    "        \"x\": \"3.2, 4.5, 6.7, 2.8, 5.1, 7.3, 3.9, 4.6, 6.2, 5.5\",\n",
-    "        \"y\": \"28, 35, 45, 22, 38, 50, 30, 36, 44, 40\"\n",
-    "    },\n",
-    "    \"Example 2 - Sales vs Advertising\": {\n",
-    "        \"x\": \"10, 20, 30, 40, 50, 60, 70, 80, 90, 100\",\n",
-    "        \"y\": \"100, 150, 200, 220, 280, 300, 350, 400, 450, 500\"\n",
-    "    },\n",
-    "    \"Example 3 - Temperature vs Ice Cream Sales\": {\n",
-    "        \"x\": \"20, 22, 25, 23, 27, 28, 30, 29, 26, 24\",\n",
-    "        \"y\": \"150, 160, 200, 180, 220, 240, 250, 230, 210, 190\"\n",
-    "    }\n",
-    "}\n",
-    "\n",
-    "# Page configuration\n",
-    "st.set_page_config(page_title=\"Correlation Analysis\", layout=\"centered\")\n",
-    "\n",
-    "# Title & Description\n",
-    "st.title(\"📊 Correlation Analysis with Hypothesis Testing\")\n",
-    "st.markdown(\"Select or input two variables to compute their **Pearson correlation coefficient** and perform a **hypothesis test**.\")\n",
-    "\n",
-    "# Dataset selection\n",
-    "selected_dataset = st.selectbox(\"Choose a dataset:\", options=list(DATASETS.keys()))\n",
-    "data_x = DATASETS[selected_dataset][\"x\"]\n",
-    "data_y = DATASETS[selected_dataset][\"y\"]\n",
-    "\n",
-    "# Input fields for custom data\n",
-    "col1, col2 = st.columns(2)\n",
-    "with col1:\n",
-    "    x_input = st.text_area(\"Variable X (comma-separated)\", value=data_x, height=150)\n",
-    "\n",
-    "with col2:\n",
-    "    y_input = st.text_area(\"Variable Y (comma-separated)\", value=data_y, height=150)\n",
-    "\n",
-    "# Button to calculate\n",
-    "if st.button(\"🔍 Calculate Correlation\"):\n",
-    "    try:\n",
-    "        # Convert inputs to lists\n",
-    "        x = list(map(float, x_input.strip().split(',')))\n",
-    "        y = list(map(float, y_input.strip().split(',')))\n",
-    "\n",
-    "        if len(x) != len(y):\n",
-    "            st.error(\"❌ Both datasets must have the same number of values.\")\n",
-    "        else:\n",
-    "            n = len(x)\n",
-    "            mean_x = sum(x) / n\n",
-    "            mean_y = sum(y) / n\n",
-    "\n",
-    "            numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))\n",
-    "            denom_x = sqrt(sum((xi - mean_x) ** 2 for xi in x))\n",
-    "            denom_y = sqrt(sum((yi - mean_y) ** 2 for yi in y))\n",
-    "\n",
-    "            r = numerator / (denom_x * denom_y)\n",
-    "\n",
-    "            # Hypothesis Test (t-test)\n",
-    "            t_stat = r * sqrt((n - 2) / (1 - r ** 2))\n",
-    "            p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))\n",
-    "\n",
-    "            # Display Results\n",
-    "            st.subheader(\"📈 Results\")\n",
-    "            st.metric(label=\"Sample Size\", value=str(n))\n",
-    "            st.metric(label=\"Pearson's r\", value=f\"{r:.3f}\")\n",
-    "            st.metric(label=\"p-value\", value=f\"{p_value:.4f}\")\n",
-    "\n",
-    "            # Interpretation\n",
-    "            st.markdown(\"### 🔍 Interpretation:\")\n",
-    "            alpha = 0.05\n",
-    "            if p_value < alpha:\n",
-    "                st.success(\"✅ Reject null hypothesis: Significant correlation (p < 0.05)\")\n",
-    "            else:\n",
-    "                st.warning(\"⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)\")\n",
-    "\n",
-    "            # Additional explanation\n",
-    "            st.markdown(\"\"\"\n",
-    "            - **Pearson's r** ranges from -1 to +1:\n",
-    "              - Close to +1 → strong positive linear relationship\n",
-    "              - Close to -1 → strong negative linear relationship\n",
-    "              - Near 0 → no linear relationship\n",
-    "            - **p-value** tells us whether the correlation is statistically significant.\n",
-    "            \"\"\")\n",
-    "\n",
-    "    except Exception as e:\n",
-    "        st.error(f\"❌ Error: {str(e)}\")\n",
-    "\n",
-    "\n",
-    "# Approximate t-distribution CDF\n",
-    "def t_cdf(x, dof):\n",
-    "    if dof <= 0:\n",
-    "        return 0.5\n",
-    "    if dof > 30:\n",
-    "        return normal_cdf(x)\n",
-    "    \n",
-    "    a = dof / 2\n",
-    "    b = 0.5\n",
-    "    x_beta = dof / (dof + x * x)\n",
-    "\n",
-    "    beta_val = np.exp(lbeta(a, b))\n",
-    "    ibeta_val = ibeta(x_beta, a, b)\n",
-    "    prob = ibeta_val\n",
-    "\n",
-    "    return prob / 2 + (0.5 if x > 0 else 0)\n",
-    "\n",
-    "\n",
-    "def normal_cdf(x):\n",
-    "    return (1 + erf(x / sqrt(2))) / 2\n",
-    "\n",
-    "\n",
-    "def lbeta(a, b):\n",
-    "    return np.log(gamma(a)) + np.log(gamma(b)) - np.log(gamma(a + b))\n",
-    "\n",
-    "\n",
-    "def gamma(x):\n",
-    "    p = [\n",
-    "        0.99999999999980993,\n",
-    "        676.5203681218851,\n",
-    "        -1259.1392167224028,\n",
-    "        771.32342877765313,\n",
-    "        -176.61502916214059,\n",
-    "        12.507341404690403,\n",
-    "        -0.13857109526572012,\n",
-    "        9.9843695780195716e-6,\n",
-    "        1.5056327351493116e-7\n",
-    "    ]\n",
-    "    if x < 0.5:\n",
-    "        return np.pi / (np.sin(np.pi * x) * gamma(1 - x))\n",
-    "    x -= 1\n",
-    "    tmp = p[0]\n",
-    "    for i in range(1, len(p)):\n",
-    "        tmp += p[i] / (x + i)\n",
-    "    t = x + len(p) - 1.5\n",
-    "    return sqrt(2 * np.pi) * pow(t, x + 0.5) * np.exp(-t) * tmp\n",
-    "\n",
-    "\n",
-    "def ibeta(x, a, b):\n",
-    "    if x == 0:\n",
-    "        return 0\n",
-    "    if x == 1:\n",
-    "        return beta(a, b)\n",
-    "    bt = np.exp(np.log(x) * a + np.log(1 - x) * b - lbeta(a, b))\n",
-    "    if x < (a + 1) / (a + b + 2):\n",
-    "        return bt * betacf(x, a, b) / a\n",
-    "    else:\n",
-    "        return 1 - bt * betacf(1 - x, b, a) / b\n",
-    "\n",
-    "\n",
-    "def beta(a, b):\n",
-    "    return np.exp(lbeta(a, b))\n",
-    "\n",
-    "\n",
-    "def betacf(x, a, b):\n",
-    "    MAXIT = 100\n",
-    "    EPS = 3e-7\n",
-    "    FPMIN = 1e-30\n",
-    "    qab = a + b\n",
-    "    qap = a + 1\n",
-    "    qam = a - 1\n",
-    "    c = 1.0\n",
-    "    d = 1.0 - qab * x / qap\n",
-    "    if abs(d) < FPMIN:\n",
-    "        d = FPMIN\n",
-    "    d = 1.0 / d\n",
-    "    h = d\n",
-    "    for m in range(1, MAXIT + 1):\n",
-    "        m2 = 2 * m\n",
-    "        aa = m * (b - m) * x / ((qam + m2) * (a + m2))\n",
-    "        d = 1 + aa * d\n",
-    "        if abs(d) < FPMIN:\n",
-    "            d = FPMIN\n",
-    "        c = 1 + aa / c\n",
-    "        if abs(c) < FPMIN:\n",
-    "            c = FPMIN\n",
-    "        d = 1 / d\n",
-    "        h *= d * c\n",
-    "        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))\n",
-    "        d = 1 + aa * d\n",
-    "        if abs(d) < FPMIN:\n",
-    "            d = FPMIN\n",
-    "        c = 1 + aa / c\n",
-    "        if abs(c) < FPMIN:\n",
-    "            c = FPMIN\n",
-    "        d = 1 / d\n",
-    "        h *= d * c\n",
-    "        if abs(h - 1) < EPS:\n",
-    "            break\n",
-    "    return h"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": 3,
-   "id": "f1a81619-7f75-4737-ad5d-142bb066b81d",
-   "metadata": {},
-   "outputs": [
-    {
-     "ename": "SyntaxError",
-     "evalue": "invalid syntax (1796384827.py, line 1)",
-     "output_type": "error",
-     "traceback": [
-      "\u001b[1;36m  Cell \u001b[1;32mIn[3], line 1\u001b[1;36m\u001b[0m\n\u001b[1;33m    http://localhost:8501\u001b[0m\n\u001b[1;37m         ^\u001b[0m\n\u001b[1;31mSyntaxError\u001b[0m\u001b[1;31m:\u001b[0m invalid syntax\n"
-     ]
-    }
-   ],
-   "source": [
-    "http://localhost:8501"
-   ]
-  },
-  {
-   "cell_type": "code",
-   "execution_count": null,
-   "id": "923da40d-eb49-43f9-b5b1-8a70345d4e88",
-   "metadata": {},
-   "outputs": [],
-   "source": []
-  }
- ],
- "metadata": {
-  "kernelspec": {
-   "display_name": "Python 3 (ipykernel)",
-   "language": "python",
-   "name": "python3"
-  },
-  "language_info": {
-   "codemirror_mode": {
-    "name": "ipython",
-    "version": 3
-   },
-   "file_extension": ".py",
-   "mimetype": "text/x-python",
-   "name": "python",
-   "nbconvert_exporter": "python",
-   "pygments_lexer": "ipython3",
-   "version": "3.12.4"
-  }
- },
- "nbformat": 4,
- "nbformat_minor": 5
-}
+import streamlit as st
+import pandas as pd
+import numpy as np
+from math import sqrt, erf
+
+# --- Helper Functions (defined first!) ---
+
+def t_cdf(x, dof):
+    if dof <= 0:
+        return 0.5
+    if dof > 30:
+        return normal_cdf(x)
+    a = dof / 2
+    b = 0.5
+    x_beta = dof / (dof + x * x)
+    beta_val = np.exp(lbeta(a, b))
+    ibeta_val = ibeta(x_beta, a, b)
+    prob = ibeta_val
+    return prob / 2 + (0.5 if x > 0 else 0)
+
+def normal_cdf(x):
+    return (1 + erf(x / sqrt(2))) / 2
+
+def lbeta(a, b):
+    return np.log(gamma(a)) + np.log(gamma(b)) - np.log(gamma(a + b))
+
+def gamma(x):
+    p = [
+        0.99999999999980993,
+        676.5203681218851,
+        -1259.1392167224028,
+        771.32342877765313,
+        -176.61502916214059,
+        12.507341404690403,
+        -0.13857109526572012,
+        9.9843695780195716e-6,
+        1.5056327351493116e-7
+    ]
+    if x < 0.5:
+        return np.pi / (np.sin(np.pi * x) * gamma(1 - x))
+    x -= 1
+    tmp = p[0]
+    for i in range(1, len(p)):
+        tmp += p[i] / (x + i)
+    t = x + len(p) - 1.5
+    return sqrt(2 * np.pi) * pow(t, x + 0.5) * np.exp(-t) * tmp
+
+def ibeta(x, a, b):
+    if x == 0:
+        return 0
+    if x == 1:
+        return beta(a, b)
+    bt = np.exp(np.log(x) * a + np.log(1 - x) * b - lbeta(a, b))
+    if x < (a + 1) / (a + b + 2):
+        return bt * betacf(x, a, b) / a
+    else:
+        return 1 - bt * betacf(1 - x, b, a) / b
+
+def beta(a, b):
+    return np.exp(lbeta(a, b))
+
+def betacf(x, a, b):
+    MAXIT = 100
+    EPS = 3e-7
+    FPMIN = 1e-30
+    qab = a + b
+    qap = a + 1
+    qam = a - 1
+    c = 1.0
+    d = 1.0 - qab * x / qap
+    if abs(d) < FPMIN:
+        d = FPMIN
+    d = 1.0 / d
+    h = d
+    for m in range(1, MAXIT + 1):
+        m2 = 2 * m
+        aa = m * (b - m) * x / ((qam + m2) * (a + m2))
+        d = 1 + aa * d
+        if abs(d) < FPMIN:
+            d = FPMIN
+        c = 1 + aa / c
+        if abs(c) < FPMIN:
+            c = FPMIN
+        d = 1 / d
+        h *= d * c
+        aa = -(a + m) * (qab + m) * x / ((a + m2) * (qap + m2))
+        d = 1 + aa * d
+        if abs(d) < FPMIN:
+            d = FPMIN
+        c = 1 + aa / c
+        if abs(c) < FPMIN:
+            c = FPMIN
+        d = 1 / d
+        h *= d * c
+        if abs(h - 1) < EPS:
+            break
+    return h
+
+# --- Main App Starts Here ---
+
+st.set_page_config(page_title="Excel Correlation App", layout="centered")
+st.title("📊 Correlation Analysis from Excel")
+st.markdown("Select two columns from the **preloaded Excel file** to compute their **Pearson correlation coefficient** and perform a **hypothesis test**.")
+
+try:
+    # Load Excel file (assumed to be in same directory)
+    df = pd.read_excel("data.xlsx")
+
+    if df.empty:
+        st.warning("❌ The Excel file is empty.")
+    else:
+        st.success("✅ Data loaded successfully!")
+        st.dataframe(df.head())
+
+        # Select Columns
+        columns = df.columns.tolist()
+        col1, col2 = st.columns(2)
+        with col1:
+            var_x = st.selectbox("Select Variable X", options=columns)
+        with col2:
+            var_y = st.selectbox("Select Variable Y", options=columns)
+
+        if var_x == var_y:
+            st.error("❌ Please select two different columns.")
+        else:
+            x = df[var_x].dropna().values
+            y = df[var_y].dropna().values
+
+            if len(x) != len(y):
+                st.warning("⚠️ Length mismatch: Trimming to shortest length.")
+                min_len = min(len(x), len(y))
+                x = x[:min_len]
+                y = y[:min_len]
+
+            if len(x) < 2:
+                st.error("❌ At least 2 data points are required for correlation.")
+            elif st.button("🔍 Calculate Correlation"):
+                n = len(x)
+                mean_x = np.mean(x)
+                mean_y = np.mean(y)
+
+                numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+                denom_x = sqrt(sum((xi - mean_x)**2 for xi in x))
+                denom_y = sqrt(sum((yi - mean_y)**2 for yi in y))
+
+                r = numerator / (denom_x * denom_y)
+
+                # Hypothesis Test
+                t_stat = r * sqrt((n - 2) / (1 - r**2))
+                p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
+
+                # Display Results
+                st.subheader("📈 Results")
+                st.metric(label="Sample Size", value=str(n))
+                st.metric(label="Pearson's r", value=f"{r:.3f}")
+                st.metric(label="p-value", value=f"{p_value:.4f}")
+
+                # Interpretation
+                st.markdown("### 🔍 Interpretation:")
+                alpha = 0.05
+                if p_value < alpha:
+                    st.success("✅ Reject null hypothesis: Significant correlation (p < 0.05)")
+                else:
+                    st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
+
+except FileNotFoundError:
+    st.error("❌ Excel file not found. Make sure 'data.xlsx' exists in the same directory.")
+except Exception as e:
+    st.error(f"❌ Error loading file: {str(e)}")
