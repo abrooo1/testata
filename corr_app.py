@@ -188,15 +188,15 @@ try:
                 else:
                     st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
 
-                # # Scatter Plot
-                # st.subheader("📉 Scatter Plot with Regression Line")
-                # fig, ax = plt.subplots()
-                # ax.scatter(x, y, color='blue', label='Data')
-                # ax.plot(x, y_pred, color='red', label='Regression Line')
-                # ax.set_xlabel(var_x)
-                # ax.set_ylabel(var_y)
-                # ax.legend()
-                # st.pyplot(fig)
+                # Scatter Plot
+                st.subheader("📉 Scatter Plot with Regression Line")
+                fig, ax = plt.subplots()
+                ax.scatter(x, y, color='blue', label='Data')
+                ax.plot(x, y_pred, color='red', label='Regression Line')
+                ax.set_xlabel(var_x)
+                ax.set_ylabel(var_y)
+                ax.legend()
+                st.pyplot(fig)
 
                 # Export Options
                 st.subheader("📤 Export Results")
