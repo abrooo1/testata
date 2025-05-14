@@ -103,7 +103,7 @@ def betacf(x, a, b):
 # --- Main App Starts Here ---
 
 st.set_page_config(page_title="Correlation & Regression App", layout="centered")
-st.title("📊 Correlation Analysis with Hypothesis Testing")
+st.title("📊 IOM DRU Correlation Analysis with Hypothesis Testing")
 st.markdown("Select two columns from the **preloaded Excel file** to compute their **Pearson correlation**, perform a **hypothesis test**, and view **regression analysis**.")
 
 try:
