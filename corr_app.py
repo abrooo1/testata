@@ -161,10 +161,24 @@ try:
                 residuals = y - y_pred
 
                 # Display Results
+                # st.subheader("📈 Results")
+                # st.metric(label="Sample Size", value=str(n))
+                # st.metric(label="Pearson's r", value=f"{r:.3f}")
+                # st.metric(label="p-value", value=f"{p_value:.4f}")
+
                 st.subheader("📈 Results")
-                st.metric(label="Sample Size", value=str(n))
-                st.metric(label="Pearson's r", value=f"{r:.3f}")
-                st.metric(label="p-value", value=f"{p_value:.4f}")
+
+                # Create 3 columns
+                col1, col2, col3 = st.columns(3)
+                
+                with col1:
+                    st.metric(label="Sample Size", value=str(n))
+                
+                with col2:
+                    st.metric(label="Pearson's r", value=f"{r:.3f}")
+                
+                with col3:
+                    st.metric(label="p-value", value=f"{p_value:.4f}")
 
                 # Interpretation
                 st.markdown("### 🔍 Interpretation:")
@@ -174,15 +188,15 @@ try:
                 else:
                     st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
 
-                # Scatter Plot
-                st.subheader("📉 Scatter Plot with Regression Line")
-                fig, ax = plt.subplots()
-                ax.scatter(x, y, color='blue', label='Data')
-                ax.plot(x, y_pred, color='red', label='Regression Line')
-                ax.set_xlabel(var_x)
-                ax.set_ylabel(var_y)
-                ax.legend()
-                st.pyplot(fig)
+                # # Scatter Plot
+                # st.subheader("📉 Scatter Plot with Regression Line")
+                # fig, ax = plt.subplots()
+                # ax.scatter(x, y, color='blue', label='Data')
+                # ax.plot(x, y_pred, color='red', label='Regression Line')
+                # ax.set_xlabel(var_x)
+                # ax.set_ylabel(var_y)
+                # ax.legend()
+                # st.pyplot(fig)
 
                 # Export Options
                 st.subheader("📤 Export Results")
