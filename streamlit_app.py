@@ -59,6 +59,9 @@ def ibeta(x, a, b):
     else:
         return 1 - bt * betacf(1 - x, b, a) / b
 
+def beta(a, b):
+    return np.exp(lbeta(a, b))
+
 def betacf(x, a, b):
     MAXIT = 100
     EPS = 3e-7
@@ -98,9 +101,9 @@ def betacf(x, a, b):
 
 # --- Main App Starts Here ---
 
-st.set_page_config(page_title="Correlation App with Cascading Filters", layout="centered")
-st.title("📊 Correlation Analysis with Cascading Filtering")
-st.markdown("Filter by 'Region contains', and see cascading updates in other fields.")
+st.set_page_config(page_title="Cascading Filtered Correlation App", layout="centered")
+st.title("📊 Correlation Analysis with Cascading Filters")
+st.markdown("Filter data by **Region**, **Zone**, or **Woreda** and analyze correlation in the filtered dataset.")
 
 try:
     # Load Excel file
@@ -112,34 +115,51 @@ try:
         st.success("✅ Data loaded successfully!")
         st.dataframe(df.head())
 
-        # --- FILTERING OPTIONS ---
-        st.subheader("🔍 Apply Filters")
+        # --- Cascading Filters ---
+        st.subheader("🔍 Apply Cascading Filters")
 
-        # Region filter
-        region_col = "Region"
-        if region_col not in df.columns:
-            st.error(f"❌ Column '{region_col}' not found in data.")
+        # Ensure required columns exist
+        required_cols = ["Region", "Zone", "Woreda"]
+        missing = [col for col in required_cols if col not in df.columns]
+
+        if missing:
+            st.warning(f"⚠️ Missing required column(s): {', '.join(missing)}. Skipping cascading filters.")
         else:
-            region_filter = st.text_input("Keep rows where 'Region' contains:")
+            region_filter = st.text_input("Region contains:")
+            zone_filter = st.text_input("Zone contains:")
+            woreda_filter = st.text_input("Woreda contains:")
+
+            # Start with full dataframe
             filtered_df = df.copy()
 
+            # Apply filters one by one
             if region_filter:
-                filtered_df = filtered_df[filtered_df[region_col].str.contains(region_filter, case=False, na=False)]
+                filtered_df = filtered_df[filtered_df["Region"].str.contains(region_filter, case=False, na=False)]
 
-            st.info(f"✅ {len(filtered_df)} rows remain after region filter.")
+            if zone_filter:
+                filtered_df = filtered_df[filtered_df["Zone"].str.contains(zone_filter, case=False, na=False)]
 
-            # Cascading: Select another column to show filtered options
-            other_cols = [col for col in filtered_df.columns if col != region_col]
-            cascade_col = st.selectbox("Select a column to view filtered values:", options=other_cols)
+            if woreda_filter:
+                filtered_df = filtered_df[filtered_df["Woreda"].str.contains(woreda_filter, case=False, na=False)]
 
-            if cascade_col:
-                unique_vals = filtered_df[cascade_col].dropna().unique()
-                st.markdown(f"### 🔄 Unique values in '{cascade_col}':")
-                st.write(unique_vals)
+            st.info(f"✅ {len(filtered_df)} rows remain after filtering.")
+
+            # Show unique values for cascading dropdowns
+            st.markdown("### 🔄 Unique Values After Filtering")
+            cols = st.columns(3)
+            with cols[0]:
+                regions = filtered_df["Region"].dropna().unique()
+                st.write("**Regions:**", ", ".join(regions.astype(str)))
+            with cols[1]:
+                zones = filtered_df["Zone"].dropna().unique()
+                st.write("**Zones:**", ", ".join(zones.astype(str)))
+            with cols[2]:
+                woredas = filtered_df["Woreda"].dropna().unique()
+                st.write("**Woredas:**", ", ".join(woredas.astype(str)))
 
         # Select Variables for Correlation
         st.subheader("📈 Select Variables for Correlation Analysis")
-        columns = filtered_df.columns.tolist()
+        columns = df.columns.tolist()
         col1, col2 = st.columns(2)
         with col1:
             var_x = st.selectbox("Select Variable X", options=columns)
@@ -149,8 +169,10 @@ try:
         if var_x == var_y:
             st.error("❌ Please select two different columns.")
         else:
-            x = filtered_df[var_x].dropna().values
-            y = filtered_df[var_y].dropna().values
+            # Use filtered DataFrame if cascading applied, else full data
+            use_df = filtered_df if "filtered_df" in locals() else df
+            x = use_df[var_x].dropna().values
+            y = use_df[var_y].dropna().values
 
             if len(x) != len(y):
                 st.warning("⚠️ Length mismatch: Trimming to shortest length.")
