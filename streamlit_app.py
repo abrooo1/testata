@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from reportlab.lib.pagesizes import letter
 from reportlab.pdfgen import canvas
 from math import sqrt, erf
-import os
 
 # --- Helper Functions ---
 
@@ -99,9 +98,9 @@ def betacf(x, a, b):
 
 # --- Main App Starts Here ---
 
-st.set_page_config(page_title="Correlation App with Filters", layout="centered")
-st.title("📊 Correlation Analysis with Filtering")
-st.markdown("Apply filters to your dataset before running correlation and regression analysis.")
+st.set_page_config(page_title="Correlation App with Cascading Filters", layout="centered")
+st.title("📊 Correlation Analysis with Cascading Filtering")
+st.markdown("Filter by 'Region contains', and see cascading updates in other fields.")
 
 try:
     # Load Excel file
@@ -116,38 +115,30 @@ try:
         # --- FILTERING OPTIONS ---
         st.subheader("🔍 Apply Filters")
 
-        filter_col1 = st.selectbox("Filter Column 1: Numeric Threshold", options=df.columns, key="f1")
-        threshold = st.number_input(f"Keep rows where '{filter_col1}' > ", value=0)
-
-        filter_col2 = st.selectbox("Filter Column 2: Text Inclusion", options=df.columns, key="f2")
-        text_filter = st.text_input(f"Keep rows where '{filter_col2}' contains:")
-
-        date_cols = [col for col in df.columns if pd.api.types.is_datetime64_dtype(df[col])]
-        if date_cols:
-            filter_col3 = st.selectbox("Filter Column 3: Date Range", options=date_cols, key="f3")
-            start_date, end_date = st.date_input(f"Select date range for '{filter_col3}'", [])
+        # Region filter
+        region_col = "Region"
+        if region_col not in df.columns:
+            st.error(f"❌ Column '{region_col}' not found in data.")
         else:
-            st.info("No date columns found for date-range filtering.")
-            filter_col3 = None
+            region_filter = st.text_input("Keep rows where 'Region' contains:")
+            filtered_df = df.copy()
 
-        # Apply Filters
-        filtered_df = df.copy()
+            if region_filter:
+                filtered_df = filtered_df[filtered_df[region_col].str.contains(region_filter, case=False, na=False)]
 
-        if pd.api.types.is_numeric_dtype(filtered_df[filter_col1]):
-            filtered_df = filtered_df[filtered_df[filter_col1] > threshold]
+            st.info(f"✅ {len(filtered_df)} rows remain after region filter.")
 
-        if pd.api.types.is_string_dtype(filtered_df[filter_col2]):
-            if text_filter:
-                filtered_df = filtered_df[filtered_df[filter_col2].str.contains(text_filter, case=False)]
+            # Cascading: Select another column to show filtered options
+            other_cols = [col for col in filtered_df.columns if col != region_col]
+            cascade_col = st.selectbox("Select a column to view filtered values:", options=other_cols)
 
-        if filter_col3 and 'start_date' in locals():
-            filtered_df[filter_col3] = pd.to_datetime(filtered_df[filter_col3])
-            filtered_df = filtered_df[(filtered_df[filter_col3] >= pd.Timestamp(start_date)) &
-                                      (filtered_df[filter_col3] <= pd.Timestamp(end_date))]
+            if cascade_col:
+                unique_vals = filtered_df[cascade_col].dropna().unique()
+                st.markdown(f"### 🔄 Unique values in '{cascade_col}':")
+                st.write(unique_vals)
 
-        st.info(f"✅ {len(filtered_df)} rows remain after filtering.")
-
-        # Select Variables
+        # Select Variables for Correlation
+        st.subheader("📈 Select Variables for Correlation Analysis")
         columns = filtered_df.columns.tolist()
         col1, col2 = st.columns(2)
         with col1:
@@ -185,14 +176,8 @@ try:
                 t_stat = r * sqrt((n - 2) / (1 - r**2))
                 p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
 
-                # Regression Model
-                slope = r * (np.std(y) / np.std(x))
-                intercept = mean_y - slope * mean_x
-                y_pred = slope * x + intercept
-                residuals = y - y_pred
-
                 # Display Results
-                st.subheader("📈 Results")
+                st.subheader("📊 Results")
                 st.metric(label="Sample Size", value=str(n))
                 st.metric(label="Pearson's r", value=f"{r:.3f}")
                 st.metric(label="p-value", value=f"{p_value:.4f}")
@@ -209,7 +194,9 @@ try:
                 st.subheader("📉 Scatter Plot with Regression Line")
                 fig, ax = plt.subplots()
                 ax.scatter(x, y, color='blue', label='Data')
-                ax.plot(x, y_pred, color='red', label='Regression Line')
+                slope = r * (np.std(y) / np.std(x))
+                intercept = mean_y - slope * mean_x
+                ax.plot(x, slope * x + intercept, color='red', label='Regression Line')
                 ax.set_xlabel(var_x)
                 ax.set_ylabel(var_y)
                 ax.legend()
@@ -220,8 +207,8 @@ try:
                 result_df = pd.DataFrame({
                     'X': x,
                     'Y': y,
-                    'Predicted Y': y_pred,
-                    'Residuals': residuals
+                    'Predicted Y': slope * x + intercept,
+                    'Residuals': y - (slope * x + intercept)
                 })
 
                 csv = result_df.to_csv(index=False).encode('utf-8')
