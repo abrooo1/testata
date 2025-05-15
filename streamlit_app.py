@@ -97,7 +97,7 @@ def betacf(x, a, b):
 # --- Main App Starts Here ---
 
 st.set_page_config(page_title="Cascading Dropdown Correlation App", layout="centered")
-st.title("📊 Correlation Analysis with Cascading Dropdown Filters")
+st.title("📊 IOM DRU Correlation Analysis with Hypothesis Testing")
 st.markdown("Use cascading dropdowns to filter data by **Region**, **Zone**, and **Woreda**, then analyze correlation.")
 
 try:
@@ -204,11 +204,25 @@ try:
                     t_stat = r * sqrt((n - 2) / (1 - r**2))
                     p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
 
+                    # # Display Results
+                    # st.subheader("📊 Results")
+                    # st.metric(label="Sample Size", value=str(n))
+                    # st.metric(label="Pearson's r", value=f"{r:.3f}")
+                    # st.metric(label="p-value", value=f"{p_value:.4f}")
                     # Display Results
                     st.subheader("📊 Results")
-                    st.metric(label="Sample Size", value=str(n))
-                    st.metric(label="Pearson's r", value=f"{r:.3f}")
-                    st.metric(label="p-value", value=f"{p_value:.4f}")
+                    
+                    # Create 3 columns for horizontal layout
+                    col1, col2, col3 = st.columns(3)
+                    
+                    with col1:
+                        st.metric(label="Sample Size", value=str(n))
+                    
+                    with col2:
+                        st.metric(label="Pearson's r", value=f"{r:.3f}")
+                    
+                    with col3:
+                        st.metric(label="p-value", value=f"{p_value:.4f}")
 
                     # Interpretation
                     st.markdown("### 🔍 Interpretation:")
