@@ -129,6 +129,7 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 try:
+    # Load Excel file
     df = pd.read_excel("data.xlsx")
     if df.empty:
         st.warning("❌ The Excel file is empty.")
@@ -140,38 +141,37 @@ try:
         else:
             st.subheader("🔍 Apply Cascading Filters")
 
+            # Step 1: Select Region
             regions = ["All"] + sorted(df["Region"].dropna().unique().astype(str).tolist())
             selected_region = st.selectbox("Select Region", options=regions, index=0)
 
-            # Normalize zones to remove 'Zone' prefix if present
-            df["Zone"] = df["Zone"].astype(str).str.replace(r'[^0-9]', '', regex=True)
-
+            # Step 2: Filter Zones based on selected Region
             filtered_zone_df = df if selected_region == "All" else df[df["Region"] == selected_region]
             zones = ["All"] + sorted(filtered_zone_df["Zone"].dropna().unique().astype(str).tolist())
             selected_zone = st.selectbox("Select Zone", options=zones, index=0)
 
-            # Filter Woredas based on selected Region and Zone
+            # Step 3: Filter Woredas based on selected Region and Zone
             if selected_region == "All":
                 filtered_woreda_df = df
             elif selected_zone == "All":
                 filtered_woreda_df = df[df["Region"] == selected_region]
             else:
                 filtered_woreda_df = df[(df["Region"] == selected_region) & (df["Zone"] == selected_zone)]
-
             woredas = ["All"] + sorted(filtered_woreda_df["Woreda"].dropna().unique().astype(str).tolist())
             selected_woreda = st.selectbox("Select Woreda", options=woredas, index=0)
 
-            # Apply filters
+            # Apply cascading filters
             filtered_df = df.copy()
             if selected_region != "All":
                 filtered_df = filtered_df[filtered_df["Region"] == selected_region]
             if selected_zone != "All":
-                filtered_df = filtered_df[filtered_df["Zone"].astype(str).str.contains(selected_zone)]
+                filtered_df = filtered_df[filtered_df["Zone"] == selected_zone]
             if selected_woreda != "All":
                 filtered_df = filtered_df[filtered_df["Woreda"] == selected_woreda]
 
             st.info(f"✅ {len(filtered_df)} rows remain after filtering.")
 
+            # Select Variables for Correlation
             numeric_cols = [col for col in filtered_df.columns if pd.api.types.is_numeric_dtype(filtered_df[col])]
             if len(numeric_cols) < 2:
                 st.warning("⚠️ At least two numeric columns are required for correlation analysis.")
@@ -195,6 +195,7 @@ try:
                     if len(x) < 2:
                         st.error("❌ At least 2 data points are required for correlation.")
                     else:
+                        # Calculate Pearson Correlation
                         n = len(x)
                         mean_x = np.mean(x)
                         mean_y = np.mean(y)
@@ -203,9 +204,11 @@ try:
                         denom_y = sqrt(sum((yi - mean_y)**2 for yi in y))
                         r = numerator / (denom_x * denom_y)
 
+                        # Hypothesis Test
                         t_stat = r * sqrt((n - 2) / (1 - r**2))
                         p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
 
+                        # Display Results Horizontally
                         st.subheader("📊 Results")
                         col1, col2, col3 = st.columns(3)
                         with col1:
@@ -230,6 +233,7 @@ try:
                             </div>
                             """, unsafe_allow_html=True)
 
+                        # Interpretation
                         st.markdown("### 🔍 Interpretation:")
                         alpha = 0.05
                         if p_value < alpha:
@@ -237,6 +241,8 @@ try:
                         else:
                             st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
 
+                        # Scatter Plot
+                        st.subheader("📉 Scatter Plot with Regression Line")
                         fig, ax = plt.subplots()
                         ax.scatter(x, y, color='blue', label='Data')
                         slope = r * (np.std(y) / np.std(x))
