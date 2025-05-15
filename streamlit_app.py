@@ -1,9 +1,13 @@
 import streamlit as st
 import pandas as pd
 import numpy as np
+import matplotlib.pyplot as plt
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 from math import sqrt, erf
+import os
 
-# --- Helper Functions (defined first!) ---
+# --- Helper Functions ---
 
 def t_cdf(x, dof):
     if dof <= 0:
@@ -56,9 +60,6 @@ def ibeta(x, a, b):
     else:
         return 1 - bt * betacf(1 - x, b, a) / b
 
-def beta(a, b):
-    return np.exp(lbeta(a, b))
-
 def betacf(x, a, b):
     MAXIT = 100
     EPS = 3e-7
@@ -98,76 +99,157 @@ def betacf(x, a, b):
 
 # --- Main App Starts Here ---
 
-st.set_page_config(page_title="Excel Correlation App", layout="centered")
-st.title("📊 Correlation Analysis from Excel")
-st.markdown("Upload an Excel file and select two columns to compute their **Pearson correlation coefficient** and perform a **hypothesis test**.")
+st.set_page_config(page_title="Correlation App with Filters", layout="centered")
+st.title("📊 Correlation Analysis with Filtering")
+st.markdown("Apply filters to your dataset before running correlation and regression analysis.")
 
-# Upload Excel File
-uploaded_file = st.file_uploader("Upload your Excel file (.xlsx)", type=["xlsx"])
+try:
+    # Load Excel file
+    df = pd.read_excel("data.xlsx")
 
-if uploaded_file:
-    try:
-        # Read Excel
-        df = pd.read_excel(uploaded_file)
+    if df.empty:
+        st.warning("❌ The Excel file is empty.")
+    else:
+        st.success("✅ Data loaded successfully!")
+        st.dataframe(df.head())
 
-        if df.empty:
-            st.warning("The uploaded file is empty.")
+        # --- FILTERING OPTIONS ---
+        st.subheader("🔍 Apply Filters")
+
+        filter_col1 = st.selectbox("Filter Column 1: Numeric Threshold", options=df.columns, key="f1")
+        threshold = st.number_input(f"Keep rows where '{filter_col1}' > ", value=0)
+
+        filter_col2 = st.selectbox("Filter Column 2: Text Inclusion", options=df.columns, key="f2")
+        text_filter = st.text_input(f"Keep rows where '{filter_col2}' contains:")
+
+        date_cols = [col for col in df.columns if pd.api.types.is_datetime64_dtype(df[col])]
+        if date_cols:
+            filter_col3 = st.selectbox("Filter Column 3: Date Range", options=date_cols, key="f3")
+            start_date, end_date = st.date_input(f"Select date range for '{filter_col3}'", [])
         else:
-            st.success("✅ File loaded successfully!")
-            st.dataframe(df.head())
+            st.info("No date columns found for date-range filtering.")
+            filter_col3 = None
 
-            # Select Columns
-            columns = df.columns.tolist()
-            col1, col2 = st.columns(2)
-            with col1:
-                var_x = st.selectbox("Select Variable X", options=columns)
-            with col2:
-                var_y = st.selectbox("Select Variable Y", options=columns)
+        # Apply Filters
+        filtered_df = df.copy()
 
-            if var_x == var_y:
-                st.error("❌ Please select two different columns.")
+        if pd.api.types.is_numeric_dtype(filtered_df[filter_col1]):
+            filtered_df = filtered_df[filtered_df[filter_col1] > threshold]
+
+        if pd.api.types.is_string_dtype(filtered_df[filter_col2]):
+            if text_filter:
+                filtered_df = filtered_df[filtered_df[filter_col2].str.contains(text_filter, case=False)]
+
+        if filter_col3 and 'start_date' in locals():
+            filtered_df[filter_col3] = pd.to_datetime(filtered_df[filter_col3])
+            filtered_df = filtered_df[(filtered_df[filter_col3] >= pd.Timestamp(start_date)) &
+                                      (filtered_df[filter_col3] <= pd.Timestamp(end_date))]
+
+        st.info(f"✅ {len(filtered_df)} rows remain after filtering.")
+
+        # Select Variables
+        columns = filtered_df.columns.tolist()
+        col1, col2 = st.columns(2)
+        with col1:
+            var_x = st.selectbox("Select Variable X", options=columns)
+        with col2:
+            var_y = st.selectbox("Select Variable Y", options=columns)
+
+        if var_x == var_y:
+            st.error("❌ Please select two different columns.")
+        else:
+            x = filtered_df[var_x].dropna().values
+            y = filtered_df[var_y].dropna().values
+
+            if len(x) != len(y):
+                st.warning("⚠️ Length mismatch: Trimming to shortest length.")
+                min_len = min(len(x), len(y))
+                x = x[:min_len]
+                y = y[:min_len]
+
+            if len(x) < 2:
+                st.error("❌ At least 2 data points are required for correlation.")
             else:
-                x = df[var_x].dropna().values
-                y = df[var_y].dropna().values
+                # Calculate Pearson Correlation
+                n = len(x)
+                mean_x = np.mean(x)
+                mean_y = np.mean(y)
 
-                if len(x) != len(y):
-                    st.warning("⚠️ Length mismatch: Trimming to shortest length.")
-                    min_len = min(len(x), len(y))
-                    x = x[:min_len]
-                    y = y[:min_len]
+                numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+                denom_x = sqrt(sum((xi - mean_x)**2 for xi in x))
+                denom_y = sqrt(sum((yi - mean_y)**2 for yi in y))
 
-                if len(x) < 2:
-                    st.error("❌ At least 2 data points are required for correlation.")
-                elif st.button("🔍 Calculate Correlation"):
-                    n = len(x)
-                    mean_x = np.mean(x)
-                    mean_y = np.mean(y)
+                r = numerator / (denom_x * denom_y)
 
-                    numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
-                    denom_x = sqrt(sum((xi - mean_x)**2 for xi in x))
-                    denom_y = sqrt(sum((yi - mean_y)**2 for yi in y))
+                # Hypothesis Test
+                t_stat = r * sqrt((n - 2) / (1 - r**2))
+                p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
 
-                    r = numerator / (denom_x * denom_y)
+                # Regression Model
+                slope = r * (np.std(y) / np.std(x))
+                intercept = mean_y - slope * mean_x
+                y_pred = slope * x + intercept
+                residuals = y - y_pred
 
-                    # Hypothesis Test
-                    t_stat = r * sqrt((n - 2) / (1 - r**2))
-                    p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
+                # Display Results
+                st.subheader("📈 Results")
+                st.metric(label="Sample Size", value=str(n))
+                st.metric(label="Pearson's r", value=f"{r:.3f}")
+                st.metric(label="p-value", value=f"{p_value:.4f}")
 
-                    # Display Results
-                    st.subheader("📈 Results")
-                    st.metric(label="Sample Size", value=str(n))
-                    st.metric(label="Pearson's r", value=f"{r:.3f}")
-                    st.metric(label="p-value", value=f"{p_value:.4f}")
+                # Interpretation
+                st.markdown("### 🔍 Interpretation:")
+                alpha = 0.05
+                if p_value < alpha:
+                    st.success("✅ Reject null hypothesis: Significant correlation (p < 0.05)")
+                else:
+                    st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
 
-                    # Interpretation
-                    st.markdown("### 🔍 Interpretation:")
-                    alpha = 0.05
-                    if p_value < alpha:
-                        st.success("✅ Reject null hypothesis: Significant correlation (p < 0.05)")
-                    else:
-                        st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
+                # Scatter Plot
+                st.subheader("📉 Scatter Plot with Regression Line")
+                fig, ax = plt.subplots()
+                ax.scatter(x, y, color='blue', label='Data')
+                ax.plot(x, y_pred, color='red', label='Regression Line')
+                ax.set_xlabel(var_x)
+                ax.set_ylabel(var_y)
+                ax.legend()
+                st.pyplot(fig)
 
-    except Exception as e:
-        st.error(f"❌ Error loading file: {str(e)}")
-else:
-    st.info("📂 Please upload an Excel file (.xlsx) to begin.")
+                # Export Options
+                st.subheader("📤 Export Results")
+                result_df = pd.DataFrame({
+                    'X': x,
+                    'Y': y,
+                    'Predicted Y': y_pred,
+                    'Residuals': residuals
+                })
+
+                csv = result_df.to_csv(index=False).encode('utf-8')
+
+                st.download_button(
+                    label="📥 Download Results as CSV",
+                    data=csv,
+                    file_name='correlation_results.csv',
+                    mime='text/csv'
+                )
+
+                # Generate PDF
+                def generate_pdf():
+                    pdf_path = "correlation_report.pdf"
+                    c = canvas.Canvas(pdf_path, pagesize=letter)
+                    c.drawString(50, 750, f"Correlation Report: {var_x} vs {var_y}")
+                    c.drawString(50, 730, f"Pearson's r: {r:.3f}")
+                    c.drawString(50, 710, f"p-value: {p_value:.4f}")
+                    c.drawString(50, 690, f"Interpretation: {'Significant' if p_value < alpha else 'Not Significant'}")
+                    c.save()
+                    return pdf_path
+
+                if st.button("📄 Generate PDF Report"):
+                    pdf_file = generate_pdf()
+                    with open(pdf_file, "rb") as f:
+                        st.download_button("📥 Download PDF Report", f, file_name="correlation_report.pdf")
+
+except FileNotFoundError:
+    st.error("❌ Excel file not found. Make sure 'data.xlsx' exists in the same directory.")
+except Exception as e:
+    st.error(f"❌ Error loading file: {str(e)}")
