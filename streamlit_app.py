@@ -120,10 +120,10 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 # --- App Title ---
-st.markdown("IOM Data and Research Unit (DRU)")
-st.markdown("Correlation Analysis with Hypothesis Testing")
-st.markdown("Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas")
-st.markdown("Returning IDPs and Non-Displaced Residents — February 2025")
+st.markdown("### IOM Data and Research Unit (DRU)")
+st.markdown("### Correlation Analysis with Hypothesis Testing")
+st.markdown("### Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas")
+st.markdown("### Returning IDPs and Non-Displaced Residents — February 2025")
 st.markdown("---")
 
 try:
