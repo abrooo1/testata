@@ -5,7 +5,6 @@ import matplotlib.pyplot as plt
 from math import sqrt, erf
 
 # --- Helper Functions ---
-
 def t_cdf(x, dof):
     if dof <= 0:
         return 0.5
@@ -95,25 +94,10 @@ def betacf(x, a, b):
     return h
 
 # --- Main App Starts Here ---
-
 st.set_page_config(page_title="IOM DRU Correlation App", layout="centered")
 
-# # Display IOM Logo (Centered and full-width)
-# st.image("iom_logo.svg", use_column_width=True)
-
-# # Centered Single-Line Title
-# st.markdown("""
-# <div style='text-align: center; padding: 10px;'>
-#     <h2 style='margin: 0; font-size: 20px;'>
-#         IOM Data and Research Unit (DRU) - Correlation Analysis with Hypothesis Testing for Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas, Returning IDPs and Non-Displaced Residents, February 2025
-#     </h2>
-# </div>
-# <hr style='margin-top: 20px; margin-bottom: 20px;'/>
-# """, unsafe_allow_html=True)
-# Display IOM Logo (Centered and full-width)
+# Display IOM Logo and Title
 st.image("iom_logo.svg", use_container_width=True)
-
-# Centered Single-Line Title
 st.markdown("""
 <div style='text-align: center; padding: 14px;'>
     <h2 style='margin: 0; font-size: 20px;'>
@@ -147,20 +131,17 @@ st.markdown("""
 try:
     # Load Excel file
     df = pd.read_excel("data.xlsx")
-
     if df.empty:
         st.warning("❌ The Excel file is empty.")
     else:
-        # Required columns
         required_cols = ["Region", "Zone", "Woreda"]
         missing = [col for col in required_cols if col not in df.columns]
-
         if missing:
             st.error(f"❌ Missing required column(s): {', '.join(missing)}")
         else:
             st.subheader("🔍 Apply Cascading Filters")
 
-            # Step 1: Select Region (default: All)
+            # Step 1: Select Region
             regions = ["All"] + sorted(df["Region"].dropna().unique().astype(str).tolist())
             selected_region = st.selectbox("Select Region", options=regions, index=0)
 
@@ -197,85 +178,80 @@ try:
             else:
                 col1, col2 = st.columns(2)
                 with col1:
-                    var_x = st.selectbox("Select Variable X", options=numeric_cols)
+                    var_x = st.selectbox("Select Variable X", options=["Please Select Variables"] + numeric_cols, index=0)
                 with col2:
-                    var_y = st.selectbox("Select Variable Y", options=[c for c in numeric_cols if c != var_x])
+                    var_y = st.selectbox("Select Variable Y", options=["Please Select Variables"] + [c for c in numeric_cols if c != var_x], index=0)
 
-                x = filtered_df[var_x].dropna().values
-                y = filtered_df[var_y].dropna().values
+                if var_x != "Please Select Variables" and var_y != "Please Select Variables":
+                    x = filtered_df[var_x].dropna().values
+                    y = filtered_df[var_y].dropna().values
 
-                if len(x) != len(y):
-                    st.warning("⚠️ Length mismatch: Trimming to shortest length.")
-                    min_len = min(len(x), len(y))
-                    x = x[:min_len]
-                    y = y[:min_len]
+                    if len(x) != len(y):
+                        st.warning("⚠️ Length mismatch: Trimming to shortest length.")
+                        min_len = min(len(x), len(y))
+                        x = x[:min_len]
+                        y = y[:min_len]
 
-                if len(x) < 2:
-                    st.error("❌ At least 2 data points are required for correlation.")
-                else:
-                    # Calculate Pearson Correlation
-                    n = len(x)
-                    mean_x = np.mean(x)
-                    mean_y = np.mean(y)
-
-                    numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
-                    denom_x = sqrt(sum((xi - mean_x)**2 for xi in x))
-                    denom_y = sqrt(sum((yi - mean_y)**2 for yi in y))
-
-                    r = numerator / (denom_x * denom_y)
-
-                    # Hypothesis Test
-                    t_stat = r * sqrt((n - 2) / (1 - r**2))
-                    p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
-
-                    # Display Results Horizontally
-                    st.subheader("📊 Results")
-
-                    col1, col2, col3 = st.columns(3)
-
-                    with col1:
-                        st.markdown("""
-                        <div class="metric-box">
-                            <div class="metric-label">Sample Size</div>
-                            <div class="metric-value">{}</div>
-                        </div>
-                        """.format(n), unsafe_allow_html=True)
-
-                    with col2:
-                        st.markdown("""
-                        <div class="metric-box">
-                            <div class="metric-label">Pearson's r</div>
-                            <div class="metric-value">{:.3f}</div>
-                        </div>
-                        """.format(r), unsafe_allow_html=True)
-
-                    with col3:
-                        st.markdown("""
-                        <div class="metric-box">
-                            <div class="metric-label">p-value</div>
-                            <div class="metric-value">{:.4f}</div>
-                        </div>
-                        """.format(p_value), unsafe_allow_html=True)
-
-                    # Interpretation
-                    st.markdown("### 🔍 Interpretation:")
-                    alpha = 0.05
-                    if p_value < alpha:
-                        st.success("✅ Reject null hypothesis: Significant correlation (p < 0.05)")
+                    if len(x) < 2:
+                        st.error("❌ At least 2 data points are required for correlation.")
                     else:
-                        st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
+                        # Calculate Pearson Correlation
+                        n = len(x)
+                        mean_x = np.mean(x)
+                        mean_y = np.mean(y)
+                        numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+                        denom_x = sqrt(sum((xi - mean_x)**2 for xi in x))
+                        denom_y = sqrt(sum((yi - mean_y)**2 for yi in y))
+                        r = numerator / (denom_x * denom_y)
 
-                    # Scatter Plot
-                    st.subheader("📉 Scatter Plot with Regression Line")
-                    fig, ax = plt.subplots()
-                    ax.scatter(x, y, color='blue', label='Data')
-                    slope = r * (np.std(y) / np.std(x))
-                    intercept = mean_y - slope * mean_x
-                    ax.plot(x, slope * x + intercept, color='red', label='Regression Line')
-                    ax.set_xlabel(var_x)
-                    ax.set_ylabel(var_y)
-                    ax.legend()
-                    st.pyplot(fig)
+                        # Hypothesis Test
+                        t_stat = r * sqrt((n - 2) / (1 - r**2))
+                        p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
+
+                        # Display Results Horizontally
+                        st.subheader("📊 Results")
+                        col1, col2, col3 = st.columns(3)
+                        with col1:
+                            st.markdown(f"""
+                            <div class="metric-box">
+                                <div class="metric-label">Sample Size</div>
+                                <div class="metric-value">{n}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col2:
+                            st.markdown(f"""
+                            <div class="metric-box">
+                                <div class="metric-label">Pearson's r</div>
+                                <div class="metric-value">{r:.3f}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+                        with col3:
+                            st.markdown(f"""
+                            <div class="metric-box">
+                                <div class="metric-label">p-value</div>
+                                <div class="metric-value">{p_value:.4f}</div>
+                            </div>
+                            """, unsafe_allow_html=True)
+
+                        # Interpretation
+                        st.markdown("### 🔍 Interpretation:")
+                        alpha = 0.05
+                        if p_value < alpha:
+                            st.success("✅ Reject null hypothesis: Significant correlation (p < 0.05)")
+                        else:
+                            st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
+
+                        # Scatter Plot
+                        st.subheader("📉 Scatter Plot with Regression Line")
+                        fig, ax = plt.subplots()
+                        ax.scatter(x, y, color='blue', label='Data')
+                        slope = r * (np.std(y) / np.std(x))
+                        intercept = mean_y - slope * mean_x
+                        ax.plot(x, slope * x + intercept, color='red', label='Regression Line')
+                        ax.set_xlabel(var_x)
+                        ax.set_ylabel(var_y)
+                        ax.legend()
+                        st.pyplot(fig)
 
 except FileNotFoundError:
     st.error("❌ Excel file not found. Make sure 'data.xlsx' exists in the same directory.")
