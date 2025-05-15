@@ -212,17 +212,46 @@ try:
                     # Display Results
                     st.subheader("📊 Results")
                     
-                    # Create 3 columns for horizontal layout
+                    # # Create 3 columns for horizontal layout
+                    # col1, col2, col3 = st.columns(3)
+                    
+                    # with col1:
+                    #     st.metric(label="Sample Size", value=str(n))
+                    
+                    # with col2:
+                    #     st.metric(label="Pearson's r", value=f"{r:.3f}")
+                    
+                    # with col3:
+                    #     st.metric(label="p-value", value=f"{p_value:.4f}")
+
+                    # Display Results as Cards
+                    st.subheader("📊 Results")
+                    
                     col1, col2, col3 = st.columns(3)
                     
                     with col1:
-                        st.metric(label="Sample Size", value=str(n))
+                        st.markdown("""
+                        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 16px; color: #555;">Sample Size</div>
+                            <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{}</div>
+                        </div>
+                        """.format(n), unsafe_allow_html=True)
                     
                     with col2:
-                        st.metric(label="Pearson's r", value=f"{r:.3f}")
+                        st.markdown("""
+                        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 16px; color: #555;">Pearson's r</div>
+                            <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{:.3f}</div>
+                        </div>
+                        """.format(r), unsafe_allow_html=True)
                     
                     with col3:
-                        st.metric(label="p-value", value=f"{p_value:.4f}")
+                        st.markdown("""
+                        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center;">
+                            <div style="font-size: 16px; color: #555;">p-value</div>
+                            <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{:.4f}</div>
+                        </div>
+                        """.format(p_value), unsafe_allow_html=True)
 
                     # Interpretation
                     st.markdown("### 🔍 Interpretation:")
