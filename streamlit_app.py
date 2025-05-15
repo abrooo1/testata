@@ -99,7 +99,7 @@ def betacf(x, a, b):
 st.set_page_config(page_title="IOM DRU Correlation App", layout="centered")
 
 # Display IOM Logo (Centered and full-width)
-st.image("iom_logo.png", use_column_width=True)
+st.image("iom_logo.svg", use_column_width=True)
 
 # Centered Single-Line Title
 st.markdown("""
