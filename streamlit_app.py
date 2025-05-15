@@ -98,6 +98,19 @@ def betacf(x, a, b):
 
 st.set_page_config(page_title="IOM DRU Correlation App", layout="centered")
 
+# Display IOM Logo (Centered and full-width)
+st.image("iom_logo.png", use_column_width=True)
+
+# Centered Single-Line Title
+st.markdown("""
+<div style='text-align: center; padding: 10px;'>
+    <h2 style='margin: 0; font-size: 18px;'>
+        IOM Data and Research Unit (DRU) - Correlation Analysis with Hypothesis Testing for Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas, Returning IDPs and Non-Displaced Residents, February 2025
+    </h2>
+</div>
+<hr style='margin-top: 20px; margin-bottom: 20px;'/>
+""", unsafe_allow_html=True)
+
 # Custom CSS for better spacing and readability
 st.markdown("""
 <style>
@@ -118,13 +131,6 @@ st.markdown("""
 }
 </style>
 """, unsafe_allow_html=True)
-
-# --- App Title ---
-st.markdown("### IOM Data and Research Unit (DRU)")
-st.markdown("### Correlation Analysis with Hypothesis Testing")
-st.markdown("### Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas")
-st.markdown("### Returning IDPs and Non-Displaced Residents — February 2025")
-st.markdown("---")
 
 try:
     # Load Excel file
@@ -151,7 +157,7 @@ try:
             zones = ["All"] + sorted(filtered_zone_df["Zone"].dropna().unique().astype(str).tolist())
             selected_zone = st.selectbox("Select Zone", options=zones, index=0)
 
-            # Step 3: Filter Woredas based on selected Zone and Region
+            # Step 3: Filter Woredas based on selected Region and Zone
             if selected_region == "All":
                 filtered_woreda_df = df
             elif selected_zone == "All":
