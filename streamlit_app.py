@@ -104,7 +104,7 @@ st.set_page_config(page_title="IOM DRU Correlation App", layout="centered")
 # # Centered Single-Line Title
 # st.markdown("""
 # <div style='text-align: center; padding: 10px;'>
-#     <h2 style='margin: 0; font-size: 18px;'>
+#     <h2 style='margin: 0; font-size: 20px;'>
 #         IOM Data and Research Unit (DRU) - Correlation Analysis with Hypothesis Testing for Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas, Returning IDPs and Non-Displaced Residents, February 2025
 #     </h2>
 # </div>
@@ -115,7 +115,7 @@ st.image("iom_logo.svg", use_container_width=True)
 
 # Centered Single-Line Title
 st.markdown("""
-<div style='text-align: center; padding: 12px;'>
+<div style='text-align: center; padding: 14px;'>
     <h2 style='margin: 0; font-size: 20px;'>
         IOM Data and Research Unit (DRU) - Correlation Analysis with Hypothesis Testing for Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas, Returning IDPs and Non-Displaced Residents, February 2025
     </h2>
