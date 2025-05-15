@@ -96,9 +96,35 @@ def betacf(x, a, b):
 
 # --- Main App Starts Here ---
 
-st.set_page_config(page_title="Cascading Dropdown Correlation App", layout="centered")
-st.title("📊 IOM DRU Correlation Analysis with Hypothesis Testing")
-st.markdown("Use cascading dropdowns to filter data by **Region**, **Zone**, and **Woreda**, then analyze correlation.")
+st.set_page_config(page_title="IOM DRU Correlation App", layout="centered")
+
+# Custom CSS for better spacing and readability
+st.markdown("""
+<style>
+.metric-box {
+    background-color: #f0f2f6;
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+.metric-label {
+    font-size: 16px;
+    color: #555;
+}
+.metric-value {
+    font-size: 28px;
+    font-weight: bold;
+    margin-top: 5px;
+}
+</style>
+""", unsafe_allow_html=True)
+
+# --- App Title ---
+st.markdown("IOM Data and Research Unit (DRU)")
+st.markdown("Correlation Analysis with Hypothesis Testing")
+st.markdown("Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas")
+st.markdown("Returning IDPs and Non-Displaced Residents — February 2025")
+st.markdown("---")
 
 try:
     # Load Excel file
@@ -107,9 +133,6 @@ try:
     if df.empty:
         st.warning("❌ The Excel file is empty.")
     else:
-        st.success("✅ Data loaded successfully!")
-        st.dataframe(df.head())
-
         # Required columns
         required_cols = ["Region", "Zone", "Woreda"]
         missing = [col for col in required_cols if col not in df.columns]
@@ -117,56 +140,39 @@ try:
         if missing:
             st.error(f"❌ Missing required column(s): {', '.join(missing)}")
         else:
-            st.subheader("🔍 Cascading Filters")
+            st.subheader("🔍 Apply Cascading Filters")
 
-            # Get unique values for each level
-            all_regions = sorted(df["Region"].dropna().unique().astype(str).tolist())
-
-            # Initialize session state for cascading
-            if "selected_region" not in st.session_state:
-                st.session_state.selected_region = all_regions[0] if all_regions else ""
-            if "selected_zone" not in st.session_state:
-                st.session_state.selected_zone = ""
-            if "selected_woreda" not in st.session_state:
-                st.session_state.selected_woreda = ""
-
-            # Step 1: Select Region
-            selected_region = st.selectbox("Select Region", options=[""] + all_regions, index=0 if not st.session_state.selected_region else all_regions.index(st.session_state.selected_region) + 1)
-            st.session_state.selected_region = selected_region
+            # Step 1: Select Region (default: All)
+            regions = ["All"] + sorted(df["Region"].dropna().unique().astype(str).tolist())
+            selected_region = st.selectbox("Select Region", options=regions, index=0)
 
             # Step 2: Filter Zones based on selected Region
-            if selected_region:
-                filtered_zones = sorted(df[df["Region"] == selected_region]["Zone"].dropna().unique().astype(str).tolist())
-                selected_zone = st.selectbox("Select Zone", options=[""] + filtered_zones, index=0 if not st.session_state.selected_zone or st.session_state.selected_zone not in filtered_zones else filtered_zones.index(st.session_state.selected_zone) + 1)
-                st.session_state.selected_zone = selected_zone
-            else:
-                filtered_zones = []
-                selected_zone = st.selectbox("Select Zone", options=[""], disabled=True)
-                st.session_state.selected_zone = ""
+            filtered_zone_df = df if selected_region == "All" else df[df["Region"] == selected_region]
+            zones = ["All"] + sorted(filtered_zone_df["Zone"].dropna().unique().astype(str).tolist())
+            selected_zone = st.selectbox("Select Zone", options=zones, index=0)
 
-            # Step 3: Filter Woredas based on selected Zone
-            if selected_zone:
-                filtered_woredas = sorted(df[(df["Region"] == selected_region) & (df["Zone"] == selected_zone)]["Woreda"].dropna().unique().astype(str).tolist())
-                selected_woreda = st.selectbox("Select Woreda", options=[""] + filtered_woredas, index=0 if not st.session_state.selected_woreda or st.session_state.selected_woreda not in filtered_woredas else filtered_woredas.index(st.session_state.selected_woreda) + 1)
-                st.session_state.selected_woreda = selected_woreda
+            # Step 3: Filter Woredas based on selected Zone and Region
+            if selected_region == "All":
+                filtered_woreda_df = df
+            elif selected_zone == "All":
+                filtered_woreda_df = df[df["Region"] == selected_region]
             else:
-                filtered_woredas = []
-                selected_woreda = st.selectbox("Select Woreda", options=[""], disabled=True)
-                st.session_state.selected_woreda = ""
+                filtered_woreda_df = df[(df["Region"] == selected_region) & (df["Zone"] == selected_zone)]
+            woredas = ["All"] + sorted(filtered_woreda_df["Woreda"].dropna().unique().astype(str).tolist())
+            selected_woreda = st.selectbox("Select Woreda", options=woredas, index=0)
 
             # Apply cascading filters
             filtered_df = df.copy()
-            if selected_region:
+            if selected_region != "All":
                 filtered_df = filtered_df[filtered_df["Region"] == selected_region]
-            if selected_zone:
+            if selected_zone != "All":
                 filtered_df = filtered_df[filtered_df["Zone"] == selected_zone]
-            if selected_woreda:
+            if selected_woreda != "All":
                 filtered_df = filtered_df[filtered_df["Woreda"] == selected_woreda]
 
             st.info(f"✅ {len(filtered_df)} rows remain after filtering.")
 
             # Select Variables for Correlation
-            st.subheader("📈 Select Variables for Correlation Analysis")
             numeric_cols = [col for col in filtered_df.columns if pd.api.types.is_numeric_dtype(filtered_df[col])]
             if len(numeric_cols) < 2:
                 st.warning("⚠️ At least two numeric columns are required for correlation analysis.")
@@ -204,52 +210,32 @@ try:
                     t_stat = r * sqrt((n - 2) / (1 - r**2))
                     p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
 
-                    # # Display Results
-                    # st.subheader("📊 Results")
-                    # st.metric(label="Sample Size", value=str(n))
-                    # st.metric(label="Pearson's r", value=f"{r:.3f}")
-                    # st.metric(label="p-value", value=f"{p_value:.4f}")
-                    # Display Results
-                    # st.subheader("📊 Results")
-                    
-                    # # Create 3 columns for horizontal layout
-                    # col1, col2, col3 = st.columns(3)
-                    
-                    # with col1:
-                    #     st.metric(label="Sample Size", value=str(n))
-                    
-                    # with col2:
-                    #     st.metric(label="Pearson's r", value=f"{r:.3f}")
-                    
-                    # with col3:
-                    #     st.metric(label="p-value", value=f"{p_value:.4f}")
-
-                    # Display Results as Cards
+                    # Display Results Horizontally
                     st.subheader("📊 Results")
-                    
+
                     col1, col2, col3 = st.columns(3)
-                    
+
                     with col1:
                         st.markdown("""
-                        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center;">
-                            <div style="font-size: 16px; color: #555;">Sample Size</div>
-                            <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{}</div>
+                        <div class="metric-box">
+                            <div class="metric-label">Sample Size</div>
+                            <div class="metric-value">{}</div>
                         </div>
                         """.format(n), unsafe_allow_html=True)
-                    
+
                     with col2:
                         st.markdown("""
-                        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center;">
-                            <div style="font-size: 16px; color: #555;">Pearson's r</div>
-                            <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{:.3f}</div>
+                        <div class="metric-box">
+                            <div class="metric-label">Pearson's r</div>
+                            <div class="metric-value">{:.3f}</div>
                         </div>
                         """.format(r), unsafe_allow_html=True)
-                    
+
                     with col3:
                         st.markdown("""
-                        <div style="background-color: #f0f2f6; padding: 15px; border-radius: 10px; text-align: center;">
-                            <div style="font-size: 16px; color: #555;">p-value</div>
-                            <div style="font-size: 28px; font-weight: bold; margin-top: 5px;">{:.4f}</div>
+                        <div class="metric-box">
+                            <div class="metric-label">p-value</div>
+                            <div class="metric-value">{:.4f}</div>
                         </div>
                         """.format(p_value), unsafe_allow_html=True)
 
