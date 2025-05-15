@@ -2,8 +2,6 @@ import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-from reportlab.lib.pagesizes import letter
-from reportlab.pdfgen import canvas
 from math import sqrt, erf
 
 # --- Helper Functions ---
@@ -59,9 +57,6 @@ def ibeta(x, a, b):
     else:
         return 1 - bt * betacf(1 - x, b, a) / b
 
-def beta(a, b):
-    return np.exp(lbeta(a, b))
-
 def betacf(x, a, b):
     MAXIT = 100
     EPS = 3e-7
@@ -101,9 +96,9 @@ def betacf(x, a, b):
 
 # --- Main App Starts Here ---
 
-st.set_page_config(page_title="Cascading Filtered Correlation App", layout="centered")
-st.title("📊 Correlation Analysis with Cascading Filters")
-st.markdown("Filter data by **Region**, **Zone**, or **Woreda** and analyze correlation in the filtered dataset.")
+st.set_page_config(page_title="Cascading Dropdown Correlation App", layout="centered")
+st.title("📊 Correlation Analysis with Cascading Dropdown Filters")
+st.markdown("Use cascading dropdowns to filter data by **Region**, **Zone**, and **Woreda**, then analyze correlation.")
 
 try:
     # Load Excel file
@@ -115,148 +110,125 @@ try:
         st.success("✅ Data loaded successfully!")
         st.dataframe(df.head())
 
-        # --- Cascading Filters ---
-        st.subheader("🔍 Apply Cascading Filters")
-
-        # Ensure required columns exist
+        # Required columns
         required_cols = ["Region", "Zone", "Woreda"]
         missing = [col for col in required_cols if col not in df.columns]
 
         if missing:
-            st.warning(f"⚠️ Missing required column(s): {', '.join(missing)}. Skipping cascading filters.")
+            st.error(f"❌ Missing required column(s): {', '.join(missing)}")
         else:
-            region_filter = st.text_input("Region contains:")
-            zone_filter = st.text_input("Zone contains:")
-            woreda_filter = st.text_input("Woreda contains:")
+            st.subheader("🔍 Cascading Filters")
 
-            # Start with full dataframe
+            # Get unique values for each level
+            all_regions = sorted(df["Region"].dropna().unique().astype(str).tolist())
+
+            # Initialize session state for cascading
+            if "selected_region" not in st.session_state:
+                st.session_state.selected_region = all_regions[0] if all_regions else ""
+            if "selected_zone" not in st.session_state:
+                st.session_state.selected_zone = ""
+            if "selected_woreda" not in st.session_state:
+                st.session_state.selected_woreda = ""
+
+            # Step 1: Select Region
+            selected_region = st.selectbox("Select Region", options=[""] + all_regions, index=0 if not st.session_state.selected_region else all_regions.index(st.session_state.selected_region) + 1)
+            st.session_state.selected_region = selected_region
+
+            # Step 2: Filter Zones based on selected Region
+            if selected_region:
+                filtered_zones = sorted(df[df["Region"] == selected_region]["Zone"].dropna().unique().astype(str).tolist())
+                selected_zone = st.selectbox("Select Zone", options=[""] + filtered_zones, index=0 if not st.session_state.selected_zone or st.session_state.selected_zone not in filtered_zones else filtered_zones.index(st.session_state.selected_zone) + 1)
+                st.session_state.selected_zone = selected_zone
+            else:
+                filtered_zones = []
+                selected_zone = st.selectbox("Select Zone", options=[""], disabled=True)
+                st.session_state.selected_zone = ""
+
+            # Step 3: Filter Woredas based on selected Zone
+            if selected_zone:
+                filtered_woredas = sorted(df[(df["Region"] == selected_region) & (df["Zone"] == selected_zone)]["Woreda"].dropna().unique().astype(str).tolist())
+                selected_woreda = st.selectbox("Select Woreda", options=[""] + filtered_woredas, index=0 if not st.session_state.selected_woreda or st.session_state.selected_woreda not in filtered_woredas else filtered_woredas.index(st.session_state.selected_woreda) + 1)
+                st.session_state.selected_woreda = selected_woreda
+            else:
+                filtered_woredas = []
+                selected_woreda = st.selectbox("Select Woreda", options=[""], disabled=True)
+                st.session_state.selected_woreda = ""
+
+            # Apply cascading filters
             filtered_df = df.copy()
-
-            # Apply filters one by one
-            if region_filter:
-                filtered_df = filtered_df[filtered_df["Region"].str.contains(region_filter, case=False, na=False)]
-
-            if zone_filter:
-                filtered_df = filtered_df[filtered_df["Zone"].str.contains(zone_filter, case=False, na=False)]
-
-            if woreda_filter:
-                filtered_df = filtered_df[filtered_df["Woreda"].str.contains(woreda_filter, case=False, na=False)]
+            if selected_region:
+                filtered_df = filtered_df[filtered_df["Region"] == selected_region]
+            if selected_zone:
+                filtered_df = filtered_df[filtered_df["Zone"] == selected_zone]
+            if selected_woreda:
+                filtered_df = filtered_df[filtered_df["Woreda"] == selected_woreda]
 
             st.info(f"✅ {len(filtered_df)} rows remain after filtering.")
 
-            # Show unique values for cascading dropdowns
-            st.markdown("### 🔄 Unique Values After Filtering")
-            cols = st.columns(3)
-            with cols[0]:
-                regions = filtered_df["Region"].dropna().unique()
-                st.write("**Regions:**", ", ".join(regions.astype(str)))
-            with cols[1]:
-                zones = filtered_df["Zone"].dropna().unique()
-                st.write("**Zones:**", ", ".join(zones.astype(str)))
-            with cols[2]:
-                woredas = filtered_df["Woreda"].dropna().unique()
-                st.write("**Woredas:**", ", ".join(woredas.astype(str)))
-
-        # Select Variables for Correlation
-        st.subheader("📈 Select Variables for Correlation Analysis")
-        columns = df.columns.tolist()
-        col1, col2 = st.columns(2)
-        with col1:
-            var_x = st.selectbox("Select Variable X", options=columns)
-        with col2:
-            var_y = st.selectbox("Select Variable Y", options=columns)
-
-        if var_x == var_y:
-            st.error("❌ Please select two different columns.")
-        else:
-            # Use filtered DataFrame if cascading applied, else full data
-            use_df = filtered_df if "filtered_df" in locals() else df
-            x = use_df[var_x].dropna().values
-            y = use_df[var_y].dropna().values
-
-            if len(x) != len(y):
-                st.warning("⚠️ Length mismatch: Trimming to shortest length.")
-                min_len = min(len(x), len(y))
-                x = x[:min_len]
-                y = y[:min_len]
-
-            if len(x) < 2:
-                st.error("❌ At least 2 data points are required for correlation.")
+            # Select Variables for Correlation
+            st.subheader("📈 Select Variables for Correlation Analysis")
+            numeric_cols = [col for col in filtered_df.columns if pd.api.types.is_numeric_dtype(filtered_df[col])]
+            if len(numeric_cols) < 2:
+                st.warning("⚠️ At least two numeric columns are required for correlation analysis.")
             else:
-                # Calculate Pearson Correlation
-                n = len(x)
-                mean_x = np.mean(x)
-                mean_y = np.mean(y)
+                col1, col2 = st.columns(2)
+                with col1:
+                    var_x = st.selectbox("Select Variable X", options=numeric_cols)
+                with col2:
+                    var_y = st.selectbox("Select Variable Y", options=[c for c in numeric_cols if c != var_x])
 
-                numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
-                denom_x = sqrt(sum((xi - mean_x)**2 for xi in x))
-                denom_y = sqrt(sum((yi - mean_y)**2 for yi in y))
+                x = filtered_df[var_x].dropna().values
+                y = filtered_df[var_y].dropna().values
 
-                r = numerator / (denom_x * denom_y)
+                if len(x) != len(y):
+                    st.warning("⚠️ Length mismatch: Trimming to shortest length.")
+                    min_len = min(len(x), len(y))
+                    x = x[:min_len]
+                    y = y[:min_len]
 
-                # Hypothesis Test
-                t_stat = r * sqrt((n - 2) / (1 - r**2))
-                p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
-
-                # Display Results
-                st.subheader("📊 Results")
-                st.metric(label="Sample Size", value=str(n))
-                st.metric(label="Pearson's r", value=f"{r:.3f}")
-                st.metric(label="p-value", value=f"{p_value:.4f}")
-
-                # Interpretation
-                st.markdown("### 🔍 Interpretation:")
-                alpha = 0.05
-                if p_value < alpha:
-                    st.success("✅ Reject null hypothesis: Significant correlation (p < 0.05)")
+                if len(x) < 2:
+                    st.error("❌ At least 2 data points are required for correlation.")
                 else:
-                    st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
+                    # Calculate Pearson Correlation
+                    n = len(x)
+                    mean_x = np.mean(x)
+                    mean_y = np.mean(y)
 
-                # Scatter Plot
-                st.subheader("📉 Scatter Plot with Regression Line")
-                fig, ax = plt.subplots()
-                ax.scatter(x, y, color='blue', label='Data')
-                slope = r * (np.std(y) / np.std(x))
-                intercept = mean_y - slope * mean_x
-                ax.plot(x, slope * x + intercept, color='red', label='Regression Line')
-                ax.set_xlabel(var_x)
-                ax.set_ylabel(var_y)
-                ax.legend()
-                st.pyplot(fig)
+                    numerator = sum((x[i] - mean_x) * (y[i] - mean_y) for i in range(n))
+                    denom_x = sqrt(sum((xi - mean_x)**2 for xi in x))
+                    denom_y = sqrt(sum((yi - mean_y)**2 for yi in y))
 
-                # Export Options
-                st.subheader("📤 Export Results")
-                result_df = pd.DataFrame({
-                    'X': x,
-                    'Y': y,
-                    'Predicted Y': slope * x + intercept,
-                    'Residuals': y - (slope * x + intercept)
-                })
+                    r = numerator / (denom_x * denom_y)
 
-                csv = result_df.to_csv(index=False).encode('utf-8')
+                    # Hypothesis Test
+                    t_stat = r * sqrt((n - 2) / (1 - r**2))
+                    p_value = 2 * (1 - t_cdf(abs(t_stat), n - 2))
 
-                st.download_button(
-                    label="📥 Download Results as CSV",
-                    data=csv,
-                    file_name='correlation_results.csv',
-                    mime='text/csv'
-                )
+                    # Display Results
+                    st.subheader("📊 Results")
+                    st.metric(label="Sample Size", value=str(n))
+                    st.metric(label="Pearson's r", value=f"{r:.3f}")
+                    st.metric(label="p-value", value=f"{p_value:.4f}")
 
-                # Generate PDF
-                def generate_pdf():
-                    pdf_path = "correlation_report.pdf"
-                    c = canvas.Canvas(pdf_path, pagesize=letter)
-                    c.drawString(50, 750, f"Correlation Report: {var_x} vs {var_y}")
-                    c.drawString(50, 730, f"Pearson's r: {r:.3f}")
-                    c.drawString(50, 710, f"p-value: {p_value:.4f}")
-                    c.drawString(50, 690, f"Interpretation: {'Significant' if p_value < alpha else 'Not Significant'}")
-                    c.save()
-                    return pdf_path
+                    # Interpretation
+                    st.markdown("### 🔍 Interpretation:")
+                    alpha = 0.05
+                    if p_value < alpha:
+                        st.success("✅ Reject null hypothesis: Significant correlation (p < 0.05)")
+                    else:
+                        st.warning("⚠️ Fail to reject null hypothesis: No significant correlation (p ≥ 0.05)")
 
-                if st.button("📄 Generate PDF Report"):
-                    pdf_file = generate_pdf()
-                    with open(pdf_file, "rb") as f:
-                        st.download_button("📥 Download PDF Report", f, file_name="correlation_report.pdf")
+                    # Scatter Plot
+                    st.subheader("📉 Scatter Plot with Regression Line")
+                    fig, ax = plt.subplots()
+                    ax.scatter(x, y, color='blue', label='Data')
+                    slope = r * (np.std(y) / np.std(x))
+                    intercept = mean_y - slope * mean_x
+                    ax.plot(x, slope * x + intercept, color='red', label='Regression Line')
+                    ax.set_xlabel(var_x)
+                    ax.set_ylabel(var_y)
+                    ax.legend()
+                    st.pyplot(fig)
 
 except FileNotFoundError:
     st.error("❌ Excel file not found. Make sure 'data.xlsx' exists in the same directory.")
