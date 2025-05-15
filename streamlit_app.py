@@ -210,7 +210,7 @@ try:
                     # st.metric(label="Pearson's r", value=f"{r:.3f}")
                     # st.metric(label="p-value", value=f"{p_value:.4f}")
                     # Display Results
-                    st.subheader("📊 Results")
+                    # st.subheader("📊 Results")
                     
                     # # Create 3 columns for horizontal layout
                     # col1, col2, col3 = st.columns(3)
