@@ -113,7 +113,7 @@ st.markdown("""
 <div style='padding: 16px; font-size: 14px; line-height: 1.6; max-width: 800px; margin: auto; text-align: left;'>
     <p><strong>The International Organization for Migration (IOM)</strong>, through its Displacement Tracking Matrix (DTM) methodology and Survey component, deployed a Household-Level Survey (HLS) in the North Western zone of the Tigray region and Zone 3 of the Contested Areas (Ethiopia) in February 2025. The target population includes returning internally displaced persons (IDPs) and non-displaced residents. 
     <p>For the purpose of analysis, household responses are coded between 0 (less favourable) and 1 (more favourable) based on the favourability of the answer. Household scores are then averaged by geographic area and population group (Solutions Index, SI) to compare the vulnerabilities of the two population groups, and measure returning IDPs progress towards achieving a durable solution.<p>  
-    <p>The analysis below, based on Pearson correlation coefficient analysis, can be performed to evaluate the relationship between variables. Understanding positive relationship between variables can help to identify which interventions are more likely to have the largest impact if implemented together. This data can be used to design multisectoral, area-based interventions.</p>
+    <p>The analysis below, based on Pearson correlation coefficient analysis, can be performed to evaluate the relationship between variables. Understanding positive relationship between variables can help to identify which interventions are more likely to have the largest impact if implemented together. This data can be used to design multisectoral, area-based interventions.<p>
   
 </div>
 """, unsafe_allow_html=True)
