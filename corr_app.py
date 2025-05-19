@@ -7,6 +7,13 @@ from reportlab.pdfgen import canvas
 from math import sqrt, erf
 import os
 
+if 'visit_count' not in st.session_state:
+    st.session_state.visit_count = 0
+
+st.session_state.visit_count += 1
+
+# Optional: Display visit count
+st.sidebar.write(f"Total page views: {st.session_state.visit_count}")
 # --- Helper Functions ---
 
 def t_cdf(x, dof):
