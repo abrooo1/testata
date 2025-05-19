@@ -96,6 +96,16 @@ def betacf(x, a, b):
 # --- Main App Starts Here ---
 st.set_page_config(page_title="IOM DRU Correlation App", layout="centered")
 
+# # Display IOM Logo and Title
+# st.image("iom_logo.svg", use_container_width=True)
+# st.markdown("""
+# <div style='text-align: center; padding: 14px;'>
+#     <h2 style='margin: 0; font-size: 20px;'>
+#         IOM Data and Research Unit (DRU) - Correlation Analysis with Hypothesis Testing for Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas, Returning IDPs and Non-Displaced Residents, February 2025
+#     </h2>
+# </div>
+# <hr style='margin-top: 20px; margin-bottom: 20px;'/>
+# """, unsafe_allow_html=True)
 # Display IOM Logo and Title
 st.image("iom_logo.svg", use_container_width=True)
 st.markdown("""
@@ -104,8 +114,18 @@ st.markdown("""
         IOM Data and Research Unit (DRU) - Correlation Analysis with Hypothesis Testing for Household-Level Survey (Solutions Index) in North Western zone of Tigray region and Zone 3 of the Contested Areas, Returning IDPs and Non-Displaced Residents, February 2025
     </h2>
 </div>
+
+<div style='padding: 16px; font-size: 14px; line-height: 1.6; max-width: 800px; margin: auto; text-align: left;'>
+    <p><strong>The International Organization for Migration (IOM)</strong>, through its Displacement Tracking Matrix (DTM) methodology and Survey component, deployed a Household-Level Survey (HLS) in the North Western zone of the Tigray region and Zone 3 of the Contested Areas (Ethiopia) in February 2025. The target population includes returning internally displaced persons (IDPs) and non-displaced residents.</p>
+
+    <p>For the purpose of analysis, household responses are coded between 0 (less favourable) and 1 (more favourable), based on the favourability of the answer. Household scores are then averaged by geographic area and population group to calculate the <strong>Solutions Index (SI)</strong>. This index allows for comparison of vulnerabilities between the two population groups and measures returning IDPs' progress toward achieving a durable solution.</p>
+
+    <p>The analysis below uses the <strong>Pearson correlation coefficient</strong> to evaluate the relationships between variables. Identifying positive relationships helps pinpoint which interventions are more likely to yield greater impact if implemented together. This data can guide the design of multisectoral, area-based interventions tailored to specific geographic zones and population needs.</p>
+</div>
+
 <hr style='margin-top: 20px; margin-bottom: 20px;'/>
 """, unsafe_allow_html=True)
+
 
 # Custom CSS for better spacing and readability
 st.markdown("""
