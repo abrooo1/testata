@@ -124,6 +124,7 @@ st.markdown("""
     font-size: 28px;
     font-weight: bold;
     margin-top: 5px;
+    color: #000; /* Ensures black text */
 }
 </style>
 """, unsafe_allow_html=True)
