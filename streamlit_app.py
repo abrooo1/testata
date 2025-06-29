@@ -139,7 +139,7 @@ st.markdown("""
 
 try:
     # Load Excel file
-    df = pd.read_excel("Data.xlsx")
+    df = pd.read_excel("educational_correlation_sample_50000x10.xlsx")
     if df.empty:
         st.warning("❌ The Excel file is empty.")
     else:
