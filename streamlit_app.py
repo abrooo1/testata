@@ -123,24 +123,24 @@ st.markdown("<hr style='margin-top: 20px; margin-bottom: 20px;'/>", unsafe_allow
 
 
 # Custom CSS for better spacing and readability
-st.markdown("""
-<style>
-.metric-box {
-    background-color: #f0f2f6;
-    padding: 15px;
-    border-radius: 10px;
-    text-align: center;
-}
-.metric-label {
-    font-size: 16px;
-    color: #555;
-}
-.metric-value {
-    font-size: 28px;
-    font-weight: bold;
-    margin-top: 5px;
-    color: #000; /* Ensures black text */
-}
+# st.markdown("""
+# <style>
+# # .metric-box {
+# #     background-color: #f0f2f6;
+# #     padding: 15px;
+# #     border-radius: 10px;
+# #     text-align: center;
+# # }
+# # .metric-label {
+# #     font-size: 16px;
+# #     color: #555;
+# # }
+# .metric-value {
+#     font-size: 28px;
+#     font-weight: bold;
+#     margin-top: 5px;
+#     color: #000; /* Ensures black text */
+# }
 </style>
 """, unsafe_allow_html=True)
 
