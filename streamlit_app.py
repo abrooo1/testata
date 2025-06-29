@@ -94,10 +94,10 @@ def betacf(x, a, b):
     return h
 
 # --- Main App Starts Here ---
-st.set_page_config(page_title="IOM DRU Correlation App", layout="centered")
+st.set_page_config(page_title="Correlation App", layout="centered")
 
-# Display IOM Logo
-st.image("iom_logo.svg", use_container_width=True)
+# # Display IOM Logo
+# st.image("iom_logo.svg", use_container_width=True)
 
 # Title
 st.markdown("""
